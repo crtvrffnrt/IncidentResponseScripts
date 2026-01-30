@@ -1,99 +1,59 @@
-# VPN Checker (Incident Response)
+# Incident Response Scripts
 
-A small incident-response helper that checks a list of IPs for VPN indicators using **ipapi.is** and prints a colorized, IR‑oriented overview. VPN hits are flagged as **MALICIOUS** by design to help quickly triage suspicious logins or network activity.
+A collection of small helpers for incident response workflows.
 
-## Features
+## 1. Graph Mail IR (`graph_mail_ir.py`)
 
-- Accepts an input list of IPs via `-i` (defaults to `ips.txt`)
-- Colorized output for fast triage
-- Summary totals (VPN / non‑VPN / unknown)
-- Defensive checks for missing dependencies and API key
+Search for specific emails across Exchange Online mailboxes using Microsoft Graph.
 
-## Requirements
+### Setup
 
-- `bash`
-- `curl`
-- `jq`
-- An API key from **ipapi.is**
+1.  **Prepare Message IDs**: Create a file (e.g., `message_ids.txt`) containing the Internet Message IDs you want to find (one per line).
+2.  **Register App**: Run the helper script to create an Azure AD app with necessary permissions (`Mail.Read`, `User.Read.All`, `Directory.Read.All`).
+    ```bash
+    ./mailreadappcreate.sh
+    ```
+    *Note the Tenant ID, Client ID, and Client Secret from the output.*
 
-## Setup
+### Usage
 
-1) **Install dependencies**
-
-- Ubuntu/Debian:
-  ```bash
-  sudo apt-get update && sudo apt-get install -y jq curl
-  ```
-
-- macOS (Homebrew):
-  ```bash
-  brew install jq curl
-  ```
-
-2) **Create API key file**
-
-The script expects the file `/Tools/apikeys.txt` with an exported variable:
+Execute the Python script using the credentials from the setup step:
 
 ```bash
-# /Tools/apikeys.txt
-export ipapisisapi="YOUR_API_KEY"
+python3 graph_mail_ir.py \
+  --tenant-id <tenant-id> \
+  --client-id <client-id> \
+  --client-secret "<client-secret>" \
+  --input message_ids.txt \
+  --output mail_timeline1.csv \
+  --upn '<optional-user-principal-name>'
 ```
 
-3) **Prepare input file**
+*   `--upn`: Optional. Scopes search to a single mailbox (faster). Omit to search all users.
+*   `--input`: Path to file containing Internet Message IDs.
+*   `--output`: Path to CSV output file.
 
-Create `ips.txt` (or another file and pass it with `-i`).
+---
 
-```text
-# Example IP list
-8.8.8.8
-1.1.1.1
-203.0.113.10
-```
+## 2. VPN Checker (`vpnchecker.sh`)
 
-## Usage
+Checks a list of IPs for VPN indicators using **ipapi.is**.
+
+### Setup & Requirements
+
+1.  Install `jq` and `curl`.
+2.  Set your API key in `/Tools/apikeys.txt`:
+    ```bash
+    export ipapisisapi="YOUR_API_KEY"
+    ```
+3.  Create an input file `ips.txt` (or specify another with `-i`).
+
+### Usage
 
 ```bash
 ./vpnchecker.sh -i ips.txt
 ```
 
-If `-i` is omitted, it defaults to `ips.txt`.
+### Output
 
-## Output
-
-The script prints a table and a short summary:
-
-- **MALICIOUS** — VPN detected (`is_vpn=true`)
-- **OK** — not a VPN (`is_vpn=false`)
-- **UNKNOWN** — no clear determination
-
-Example:
-
-```
-Incident Response: VPN Signal Check
-IP                 IsVPN    VPNProvider          Flag
---                 -----    -----------          ----
-203.0.113.10        true     ExampleVPN           MALICIOUS
-1.1.1.1             false    N/A                  OK
-
-Overview
-Total IPs: 2
-VPN (malicious): 1
-Not VPN: 1
-Unknown: 0
-```
-
-## Notes for Incident Response
-
-- This script **only flags VPN signals**. Treat results as one signal among many.
-- A VPN match is marked **MALICIOUS** to emphasize potential risk in IR workflows.
-- Combine with other telemetry (geo, ASN, device, MFA, user behavior) before acting.
-
-## Troubleshooting
-
-- **`jq` not found**: install `jq` and retry.
-- **API key error**: ensure `/Tools/apikeys.txt` exists and `ipapisisapi` is exported.
-- **No results / unknown**: the upstream API may not return VPN details for all IPs.
-
-## License
-
-MIT (or your preferred license)
+Flags IPs as **MALICIOUS** (VPN detected), **OK** (Not VPN), or **UNKNOWN**.
