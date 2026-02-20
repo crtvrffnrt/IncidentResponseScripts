@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Load API keys
-source /Tools/apikeys.txt
+source /root/Tools/apikeys.txt
 
 API_URL="https://api.ipapi.is"
 
