@@ -57,3 +57,44 @@ Checks a list of IPs for VPN indicators using **ipapi.is**.
 ### Output
 
 Flags IPs as **MALICIOUS** (VPN detected), **OK** (Not VPN), or **UNKNOWN**.
+
+---
+
+## 3. IP to Host (`iptohost.py`)
+
+Finds distinct current and historical hostnames related to an IP address by querying multiple OSINT sources (Shodan, VirusTotal, Passive DNS, etc.).
+
+### Setup & Requirements
+
+1.  **Python 3** and **curl** must be installed.
+2.  **API Keys**: Many sources require API keys. The script checks:
+    -   `/root/Tools/apikeys.txt`
+    -   `./apikeys.txt`
+    -   Environment variables
+    Supported keys include: `shodan`, `virustotal`, `otx`, `riskiq_user`, `riskiq_key`, `urlscan`, `securitytrails`, `censys`, `netlas`, `fofa_key`, `criminalip`, `whoisjson`, `ipinfo`, and `ipapisis`.
+
+    *Note: If no API keys are provided, it will still use local resolution, Google DoH, crt.sh, and HackerTarget.*
+
+### Usage
+
+**Single IP (Full Analysis):**
+```bash
+python3 iptohost.py -ip 1.2.3.4
+```
+
+**Batch (File or CIDR Range):**
+```bash
+python3 iptohost.py -f ips.txt
+python3 iptohost.py -r 1.2.3.0/24
+```
+
+**JSON Output:**
+```bash
+python3 iptohost.py -ip 1.2.3.4 --json
+```
+
+### Features
+
+-   **Active Resolutions**: Hostnames that currently resolve to the target IP.
+-   **Historical Findings**: Passive DNS, certificate transparency records, and historical OSINT database entries.
+-   **VT Score**: Displays VirusTotal malicious detection ratio for the IP.
