@@ -262,7 +262,7 @@ echo -e "${LM}$(cat << "EOF"
 ║                              ║
 ╚══════════════════════════════╝
 EOF
-)${NC}  ${D}IP-IR${NC}"
+)${NC}  ${D}Author: Patrick Binder${NC}"
 
 if [[ "$LIST_MODE" == true ]]; then
     log_header "Ultra-Parallel Batch Analysis: ${#IP_LIST[@]} Targets"
