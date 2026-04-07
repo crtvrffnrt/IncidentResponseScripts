@@ -1,7 +1,8 @@
 #!/bin/bash
-# ipir.sh - Ultra Advanced Incident Response & Threat Intel Tool v5.1
-# Portable Version - Universal Symbols & Enhanced Traffic Light Output
-# Optimized for Oh-My-Zsh / Debian / Futuristic STDOUT / Ultra-Parallel
+# ipir.sh - ASCII-safe IP-IR tool
+
+export LANG="${LANG:-C.UTF-8}"
+export LC_ALL="${LC_ALL:-C.UTF-8}"
 
 # --- Configuration & Dependencies ---
 API_KEY_FILE="/root/dev/ir/apikeys.txt"
@@ -24,7 +25,7 @@ C='\033[0;36m'; LC='\033[1;36m'
 W='\033[1;37m'; D='\033[2m'; NC='\033[0m'
 BOLD='\033[1m'
 
-# Universal Symbols (Compatible with all Linux Terminals)
+# Universal Symbols (ASCII-safe)
 SYM_INFO="[i]"; SYM_WARN="[!]"; SYM_ERR="[X]"; SYM_OK="[V]"; SYM_SCAN="[*]"; SYM_SHIELD="[S]"
 SYM_LOC="[L]"; SYM_NET="[N]"; SYM_VPN="(V)"; SYM_TOR="(T)"; SYM_PROXY="(P)"
 SYM_MOB="(m)"; SYM_DC="(D)"; SYM_TIME="[t]"; SYM_FILE="[f]"; SYM_WEB="[w]"
@@ -32,29 +33,29 @@ SYM_MOB="(m)"; SYM_DC="(D)"; SYM_TIME="[t]"; SYM_FILE="[f]"; SYM_WEB="[w]"
 # --- Utility Functions ---
 log_verbose() { [[ "$VERBOSE" == true ]] && echo -e "${M}[V]${NC} $1"; }
 log_stat() { printf "  ${D}%-22s${NC} : %b\n" "$1" "$2"; }
-draw_sep() { echo -e "${D}ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ${NC}"; }
+draw_sep() { printf "  %s%s%s\n" "${D}" "----------------------------------------------------------------------------" "${NC}"; }
 log_header() { echo -e "\n${LM}${SYM_SCAN}  $1 ${NC}"; draw_sep; }
 
 draw_traffic_light() {
     local score=$1
-    local r_char="Ôùï"; local y_char="Ôùï"; local g_char="Ôùï"
+    local r_char="!"; local y_char="!"; local g_char="!"
     local r_clr="${D}"; local y_clr="${D}"; local g_clr="${D}"
     local msg=""
 
     if [[ $score -ge 600 ]]; then
-        r_clr="${LR}"; r_char="ÔùÅ"; msg="${LR}MALICIOUS${NC}"
+        r_clr="${LR}"; r_char="!"; msg="${LR}MALICIOUS${NC}"
     elif [[ $score -ge 200 ]]; then
-        y_clr="${LY}"; y_char="ÔùÅ"; msg="${LY}SUSPICIOUS${NC}"
+        y_clr="${LY}"; y_char="!"; msg="${LY}SUSPICIOUS${NC}"
     else
-        g_clr="${LG}"; g_char="ÔùÅ"; msg="${LG}CLEAN${NC}"
+        g_clr="${LG}"; g_char="!"; msg="${LG}CLEAN${NC}"
     fi
 
     echo -e "\n  ${BOLD}FINAL ASSESSMENT${NC}"
-    echo -e "  ${D}ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòù${NC}"
-    echo -e "  ${D}Ôòæ${NC} ${r_clr}${r_char}${NC} ${D}Ôòæ${NC}  ${D}Score :${NC} ${W}${score}${NC}"
-    echo -e "  ${D}Ôòæ${NC} ${y_clr}${y_char}${NC} ${D}Ôòæ${NC}  ${D}State :${NC} ${msg}"
-    echo -e "  ${D}Ôòæ${NC} ${g_clr}${g_char}${NC} ${D}Ôòæ${NC}"
-    echo -e "  ${D}ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ${NC}\n"
+    echo -e "  ${D}+-------------------+${NC}"
+    echo -e "  ${D}|${NC} ${r_clr}${r_char}${NC} ${D}|${NC}  ${D}Score :${NC} ${W}${score}${NC}"
+    echo -e "  ${D}|${NC} ${y_clr}${y_char}${NC} ${D}|${NC}  ${D}State :${NC} ${msg}"
+    echo -e "  ${D}|${NC} ${g_clr}${g_char}${NC} ${D}|${NC}"
+    echo -e "  ${D}+-------------------+${NC}\n"
 }
 
 # --- Initialization ---
@@ -62,7 +63,7 @@ VERBOSE=false; LIST_MODE=false; IP_LIST=(); TARGET=""
 RESULTS_FILE=$(mktemp)
 
 show_help() {
-    echo -e "${LC}${SYM_SCAN} IPIR v5.1 - Portable Sentinel Prime${NC}"
+    echo -e "${LC}${SYM_SCAN} IP-IR${NC}"
     echo -e "${D}Usage:${NC} $0 [options] <IP|Domain|URL|Hash|File>"
     echo -e ""
     echo -e "${LC}Options:${NC}"
@@ -111,13 +112,14 @@ investigate_ip() {
     local target_input=$1
     local ip=""
     local ioctype=""
-    
+
     if [[ $target_input =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
         ip=$target_input; ioctype="ipv4"
     elif [[ $target_input =~ ^([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}$ || $target_input =~ "::" ]]; then
         ip=$target_input; ioctype="ipv6"
     else
-        local domain=$(echo "$target_input" | sed -e 's|^[^/]*//||' -e 's|/.*$||' -e 's|:.*$||')
+        local domain
+        domain=$(echo "$target_input" | sed -e 's|^[^/]*//||' -e 's|/.*$||' -e 's|:.*$||')
         ip=$(dig +short A "${domain}" | head -n 1)
         [[ -z "$ip" ]] && { ip=$(dig +short AAAA "${domain}" | head -n 1); ioctype="ipv6"; } || ioctype="ipv4"
         [[ -z "$ip" ]] && return 1
@@ -129,14 +131,14 @@ investigate_ip() {
     local fraud_score=0; local abuse_conf=0; local vt_mal=0; local kasp_zone="Unknown"
     local otx_pulses=0; local crowdsec_rep="safe"; local threatfox_conf=0; local hybrid_matches=0
 
-    # 1. IPInfo & WHOIS Basics
-    local ipinfo_res=$(curl -s --max-time 10 "https://ipinfo.io/$ip?token=$ipinfoapi")
+    local ipinfo_res
+    ipinfo_res=$(curl -s --max-time 10 "https://ipinfo.io/$ip?token=$ipinfoapi")
     country=$(echo "$ipinfo_res" | jq -r '.country // "N/A"')
     asn=$(echo "$ipinfo_res" | jq -r '.org // "N/A"')
     org=$(whois "$ip" | grep -iE "OrgName|org-name|organisation|netname" | head -n 1 | awk -F: '{print $2}' | sed 's/^[ \t]*//')
 
-    # 2. Proxy/VPN/Fraud (IPQualityScore)
-    local ipq_res=$(curl -s --max-time 10 "https://ipqualityscore.com/api/json/ip/$ipqapi/$ip?strictness=1&allow_public_access_points=true&fast=true&lighter_penalties=true&mobile=true")
+    local ipq_res
+    ipq_res=$(curl -s --max-time 10 "https://ipqualityscore.com/api/json/ip/$ipqapi/$ip?strictness=1&allow_public_access_points=true&fast=true&lighter_penalties=true&mobile=true")
     [[ $(echo "$ipq_res" | jq -r '.active_vpn // false') == "true" ]] && is_vpn=true
     [[ $(echo "$ipq_res" | jq -r '.active_tor // false') == "true" ]] && is_tor=true
     [[ $(echo "$ipq_res" | jq -r '.proxy // false') == "true" ]] && is_proxy=true
@@ -144,62 +146,57 @@ investigate_ip() {
     fraud_score=$(echo "$ipq_res" | jq -r '.fraud_score // 0')
     ((score += fraud_score))
 
-    # 3. proxycheck.io
-    local pc_res=$(curl -s --max-time 10 "https://proxycheck.io/v2/$ip?vpn=1&asn=1")
+    local pc_res
+    pc_res=$(curl -s --max-time 10 "https://proxycheck.io/v2/$ip?vpn=1&asn=1")
     [[ $(echo "$pc_res" | jq -r --arg ip "$ip" '.[$ip].proxy // "no"') == "yes" ]] && is_proxy=true
     [[ $(echo "$pc_res" | jq -r --arg ip "$ip" '.[$ip].type // ""') == "VPN" ]] && is_vpn=true
 
-    # 4. ipapi.is
-    local ipis_res=$(curl -s --max-time 10 "https://api.ipapi.is/?ip=$ip&key=$ipapisisapi")
+    local ipis_res
+    ipis_res=$(curl -s --max-time 10 "https://api.ipapi.is/?ip=$ip&key=$ipapisisapi")
     [[ $(echo "$ipis_res" | jq -r '.is_vpn // false') == "true" ]] && is_vpn=true
     [[ $(echo "$ipis_res" | jq -r '.is_datacenter // false') == "true" ]] && is_datacenter=true
 
-    # 5. AbuseIPDB
-    local abuse_res=$(curl -s --max-time 10 -G https://api.abuseipdb.com/api/v2/check --data-urlencode ipAddress="$ip" -H "Key: $abuseapi" -H "Accept: application/json")
+    local abuse_res
+    abuse_res=$(curl -s --max-time 10 -G https://api.abuseipdb.com/api/v2/check --data-urlencode ipAddress="$ip" -H "Key: $abuseapi" -H "Accept: application/json")
     abuse_conf=$(echo "$abuse_res" | jq -r '.data.abuseConfidenceScore // 0')
     ((score += abuse_conf * 4))
 
-    # 6. VirusTotal
-    local vt_res=$(curl -s --max-time 10 -H "x-apikey: $vtapi" "https://www.virustotal.com/api/v3/ip_addresses/$ip")
+    local vt_res
+    vt_res=$(curl -s --max-time 10 -H "x-apikey: $vtapi" "https://www.virustotal.com/api/v3/ip_addresses/$ip")
     vt_mal=$(echo "$vt_res" | jq -r '.data.attributes.last_analysis_stats.malicious // 0')
     ((score += vt_mal * 150))
 
-    # 7. AlienVault OTX
     otx_pulses=$(curl -s --max-time 10 -H "X-OTX-API-KEY: $otxapi" "https://otx.alienvault.com/api/v1/indicators/IPv4/$ip" | jq -r '.pulse_info.count // 0')
     ((score += otx_pulses * 50))
 
-    # 8. Kaspersky
     kasp_zone=$(curl -s --max-time 10 -H "x-api-key: $kasperskyapi" "https://opentip.kaspersky.com/api/v1/search/ip?request=$ip" | jq -r '.Zone // "Unknown"')
     [[ "$kasp_zone" == "Red" ]] && ((score += 500))
     [[ "$kasp_zone" == "Orange" ]] && ((score += 200))
 
-    # 9. CrowdSec
     crowdsec_rep=$(curl -s --max-time 10 -H "x-api-key: $crowdsecapi" "https://cti.api.crowdsec.net/v2/smoke/$ip" | jq -r '.reputation // "safe"')
     [[ "$crowdsec_rep" == "malicious" ]] && ((score += 400))
 
-    # 10. Threatfox
     threatfox_conf=$(curl -s --max-time 10 -X POST https://threatfox-api.abuse.ch/api/v1/ -d "{ \"query\": \"search_ioc\", \"search_term\": \"$ip\" }" | jq -r '.data[0].confidence_level // 0')
     ((score += threatfox_conf * 3))
 
-    # 11. Hybrid Analysis
     hybrid_matches=$(curl -s --max-time 10 -H "api-key: $hybridapi" -H "accept: application/json" -d "host=$ip" "https://www.hybrid-analysis.com/api/v2/search/terms" | jq -r '.count // 0')
     ((score += hybrid_matches * 100))
 
-    # 11b. URLHaus Check
-    local urlhaus_hit=$(curl -s --max-time 5 https://urlhaus.abuse.ch/downloads/csv_online/ | grep -q "$ip" && echo "true" || echo "false")
+    local urlhaus_hit
+    urlhaus_hit=$(curl -s --max-time 5 https://urlhaus.abuse.ch/downloads/csv_online/ | grep -q "$ip" && echo "true" || echo "false")
     [[ "$urlhaus_hit" == "true" ]] && ((score += 400))
 
-    # 12. Shodan Tags
-    local shodan_res=$(curl -s --max-time 10 "https://api.shodan.io/shodan/host/$ip?key=$shdapi")
-    local sh_tags=$(echo "$shodan_res" | jq -r '.tags // [] | join(",")')
+    local shodan_res
+    shodan_res=$(curl -s --max-time 10 "https://api.shodan.io/shodan/host/$ip?key=$shdapi")
+    local sh_tags
+    sh_tags=$(echo "$shodan_res" | jq -r '.tags // [] | join(",")')
     [[ "$sh_tags" == *"vpn"* ]] && is_vpn=true
     [[ "$sh_tags" == *"tor"* ]] && is_tor=true
 
-    # 13. Azure/Microsoft Check
-    local is_ms=$(curl -s --max-time 5 "https://www.azurespeed.com/api/ipAddress?ipOrDomain=$ip" | jq '. | length')
+    local is_ms
+    is_ms=$(curl -s --max-time 5 "https://www.azurespeed.com/api/ipAddress?ipOrDomain=$ip" | jq '. | length')
     [[ $is_ms -gt 0 ]] && ((score -= 300))
 
-    # 14. Blacklist Check
     local bl_count=0
     local bl_urls=("https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt" "https://www.binarydefense.com/banlist.txt")
     for url in "${bl_urls[@]}"; do
@@ -207,12 +204,11 @@ investigate_ip() {
     done
     ((score += bl_count * 500))
 
-    # Output formatting
     if [[ "$LIST_MODE" == false ]]; then
         echo -e "\n${LC}${SYM_INFO} Investigation: ${W}${ip}${NC} ${D}[${ioctype}]${NC}"
         log_stat "${SYM_LOC} Geolocation" "${LB}${country}${NC} | ${D}${asn}${NC}"
         log_stat "${SYM_NET} Organization" "${W}${org:-N/A}${NC}"
-        
+
         local infra_str=""
         [[ "$is_vpn" == "true" ]] && infra_str+="${LY}${SYM_VPN} VPN ${NC}"
         [[ "$is_proxy" == "true" ]] && infra_str+="${LM}${SYM_PROXY} PROXY ${NC}"
@@ -236,11 +232,11 @@ investigate_ip() {
         [[ -z "$threat_str" ]] && threat_str="${G}${SYM_OK} No Major Hits${NC}"
         log_stat "${SYM_ERR} Threat Intel" "$threat_str"
 
-        local hostnames=$(echo "$shodan_res" | jq -r '.hostnames // [] | join(", ")')
+        local hostnames
+        hostnames=$(echo "$shodan_res" | jq -r '.hostnames // [] | join(", ")')
         [[ -z "$hostnames" ]] && command -v dnsx &> /dev/null && hostnames=$(dnsx -silent -resp-only -ptr "$ip")
         [[ -n "$hostnames" ]] && log_stat "${SYM_WEB} Hostnames" "${LC}${hostnames}${NC}"
 
-        # Final Traffic Light
         draw_traffic_light "$score"
 
         if [[ $score -ge 1200 && $abuse_conf -gt 50 ]]; then
@@ -254,31 +250,36 @@ investigate_ip() {
 
 # --- Main Logic ---
 echo -e "${LM}$(cat << "EOF"
-    ____ ____  ____ ____ 
-   /  _// __ \/  _// __ \
-   / / / /_/ // / / /_/ /
- _/ / / ____/_/ / / _, _/ 
-/___//_/    /___//_/ |_|  
-                          
+██╗██████╗     ██╗██████╗ 
+██║██╔══██╗    ██║██╔══██╗
+██║██████╔╝    ██║██████╔╝
+██║██╔═══╝     ██║██╔══██╗
+██║██║         ██║██║  ██║
+╚═╝╚═╝         ╚═╝╚═╝  ╚═╝
+╔══════════════════════════════╗
+║                              ║
+║ IP-based   Incident Response ║
+║                              ║
+╚══════════════════════════════╝
 EOF
-)${NC}  ${D}v5.1 Sentinel Prime${NC}"
+)${NC}  ${D}IP-IR${NC}"
 
 if [[ "$LIST_MODE" == true ]]; then
     log_header "Ultra-Parallel Batch Analysis: ${#IP_LIST[@]} Targets"
     for ip_entry in "${IP_LIST[@]}"; do
         investigate_ip "$ip_entry" > /dev/null &
     done
-    
+
     echo -ne "  ${D}Crunching data... ${NC}"
     while [[ $(jobs -r | wc -l) -gt 0 ]]; do
         echo -ne "${LC}${SYM_TIME} ${NC}"
         sleep 0.5
     done
     echo -e "${LG}${SYM_OK} Complete${NC}"
-    
+
     log_header "Risk Assessment Matrix (Sorted by Risk Index)"
     mapfile -t sorted_results < <(sort -rn -t'|' -k1 "$RESULTS_FILE")
-    
+
     printf "  ${BOLD}%-6s %-16s %-4s %-10s %-15s${NC}\n" "Score" "IP Address" "LOC" "Infra" "Provider Status"
     draw_sep
     for line in "${sorted_results[@]}"; do
