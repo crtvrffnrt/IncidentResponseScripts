@@ -15,6 +15,10 @@ DEFAULT_WORKERS = 8
 CSV_DELIMITER = ";"
 
 
+class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 def status(message: str) -> None:
     print(message, file=sys.stderr, flush=True)
 
@@ -194,14 +198,14 @@ def main():
     help_text = load_help_text()
     parser = argparse.ArgumentParser(
         description="Search mailboxes for Internet Message IDs using Microsoft Graph.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=HelpFormatter,
         epilog=help_text
     )
-    parser.add_argument("--tenant-id", required=True)
-    parser.add_argument("--client-id", required=True)
-    parser.add_argument("--client-secret", required=True)
-    parser.add_argument("--input", required=True)
-    parser.add_argument("--output", required=True)
+    parser.add_argument("--tenant-id", required=True, help="Microsoft Entra tenant ID.")
+    parser.add_argument("--client-id", required=True, help="Client ID of the Graph IR app registration.")
+    parser.add_argument("--client-secret", required=True, help="Client secret for the Graph IR app registration.")
+    parser.add_argument("--input", required=True, help="Path to a text file containing Internet Message IDs.")
+    parser.add_argument("--output", required=True, help="Path to the semicolon-delimited CSV output file.")
     parser.add_argument(
         "--user",
         action="append",
