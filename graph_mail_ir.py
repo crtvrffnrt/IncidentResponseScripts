@@ -12,6 +12,7 @@ from typing import Iterable, Optional, Dict, Any, List
 GRAPH_SCOPE = "https://graph.microsoft.com/.default"
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 DEFAULT_WORKERS = 8
+CSV_DELIMITER = ";"
 
 
 def status(message: str) -> None:
@@ -55,7 +56,7 @@ def format_recipients(recipients: Optional[List[Dict[str, Any]]]) -> Optional[st
         address = recipient.get("emailAddress", {}).get("address")
         if address:
             addresses.append(address)
-    return "; ".join(addresses) if addresses else None
+    return ", ".join(addresses) if addresses else None
 
 
 def load_user_values(value: str) -> List[str]:
@@ -288,7 +289,7 @@ def main():
 
     rows = [rows_by_message_id[mid] for mid in message_ids if mid in rows_by_message_id]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+        writer = csv.DictWriter(f, fieldnames=rows[0].keys(), delimiter=CSV_DELIMITER)
         writer.writeheader()
         writer.writerows(rows)
 
