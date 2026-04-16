@@ -6,7 +6,7 @@ A collection of small helpers for incident response workflows.
 
 Enrich a list of suspicious mails across Exchange Online mailboxes using Microsoft Graph.
 
-This script is intended for incident response after a Microsoft 365 user has been suspected or confirmed as compromised and mailbox content needs to be scoped quickly. The usual first step is to identify which mails were accessed for a given user. This tool takes that initial list of message identifiers and enriches it with additional mailbox context, such as:
+This script is intended for incident response after a Microsoft 365 user has been suspected or confirmed as compromised and mailbox content needs to be scoped quickly. The usual first step is to identify which mails were accessed for a given user. This tool takes that initial list of InternetMessageId`s and enriches it with additional mailbox context, such as:
 
 - Subject
 - Sender
