@@ -9,7 +9,7 @@ USER_READ_ALL_ROLE="df021288-bdef-4463-88db-98f22de89214"
 DIRECTORY_READ_ALL_ROLE="7ab1d382-f21e-4acd-a863-ba3e13f7da61"
 
 # Cleanup existing app if it exists
-echo "[*] Checking for existing app with name '$APP_NAME'வுகளை"
+echo "[*] Checking for existing app with name '$APP_NAME'"
 EXISTING_APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[].appId" -o tsv)
 if [ -n "$EXISTING_APP_ID" ]; then
   echo "[-] Found existing app ($EXISTING_APP_ID). Deleting..."
