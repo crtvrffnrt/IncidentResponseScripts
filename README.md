@@ -162,7 +162,38 @@ Flags IPs as **MALICIOUS** (VPN detected), **OK** (Not VPN), or **UNKNOWN**.
 
 ---
 
-## 3. IP to Host (`iptohost.py`)
+## 3. URL IR (`urlir.sh`)
+
+Checks a suspicious URL with a compact SOC-friendly verdict. The script first resolves the URL host and enriches the first resolved IP, then checks URL reputation, then checks the host and root domain.
+
+### Setup & Requirements
+
+Install `jq`, `dig`, `curl`, `base64`, and `python3`.
+
+API keys are loaded from `/root/Tools/apikeys.txt`. The script verifies that the required key variables exist before starting. Cloudflare Radar is verified with `/user/tokens/verify`; if the token is invalid during runtime, that source is skipped and the other checks continue.
+
+### Usage
+
+```bash
+./urlir.sh https://example.com/path
+./urlir.sh -file URLs.txt
+```
+
+Cloudflare Radar is automatic: the script first searches for an existing URL Scanner result, uses it when available, and only creates a new scan when no usable result exists. File mode reads one URL per non-empty line and ignores lines starting with `#`.
+
+### Output
+
+The output is intentionally short:
+
+- Resolved IP context
+- URL reputation
+- Host and root-domain reputation
+- Traffic-light verdict: **CLEAN**, **SUSPICIOUS**, or **MALICIOUS**
+- One-line source errors when an API is blocked, rate-limited, or unavailable
+
+---
+
+## 4. IP to Host (`iptohost.py`)
 
 Finds distinct current and historical hostnames related to an IP address by querying multiple OSINT sources (Shodan, VirusTotal, Passive DNS, etc.).
 
