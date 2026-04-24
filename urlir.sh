@@ -34,7 +34,7 @@ IP_RESULT_LINES=()
 required_cmds=(jq dig curl sort grep sed awk base64 python3)
 required_keys=(
     vtapi otxapi kasperskyapi threatfoxapi abusechapi
-    ipinfoapi ipqapi ipapisisapi abuseapi crowdsecapi hybridapi shdapi
+    ipinfoapi ipapisisapi abuseapi crowdsecapi hybridapi shdapi
     CLOUDFLARE_API CLOUDFLARE_ACCOUNT_ID
 )
 
@@ -159,6 +159,24 @@ http_request() {
     CURL_DATA=$(cat "$tmp")
     rm -f "$tmp"
     [[ "$CURL_RC" -eq 0 ]]
+}
+
+resolve_final_url() {
+    local input_url="$1"
+    local response rc http_code final_url num_redirects
+
+    response=$(curl -sS -L --max-redirs 10 --connect-timeout 5 --max-time 20 -o /dev/null \
+        -w '%{http_code}\t%{url_effective}\t%{num_redirects}' "$input_url" 2>/dev/null)
+    rc=$?
+    if [[ "$rc" -ne 0 || -z "$response" ]]; then
+        printf '000\t%s\t0\n' "$input_url"
+        return 1
+    fi
+
+    IFS=$'\t' read -r http_code final_url num_redirects <<< "$response"
+    [[ -z "$final_url" ]] && final_url="$input_url"
+    [[ -z "$num_redirects" ]] && num_redirects=0
+    printf '%s\t%s\t%s\n' "${http_code:-000}" "$final_url" "$num_redirects"
 }
 
 safe_jq() {
@@ -512,17 +530,6 @@ resolved_ip_check() {
         IP_RESULT_LINES+=("IPInfo|${country}, ${asn}")
     } || add_error "IPInfo: request failed"
 
-    http_request 10 "https://ipqualityscore.com/api/json/ip/$ipqapi/$ip?strictness=1&allow_public_access_points=true&fast=true&lighter_penalties=true&mobile=true" && {
-        local fraud vpn proxy tor
-        fraud=$(safe_jq '.fraud_score' 0)
-        vpn=$(safe_jq '.active_vpn' false)
-        proxy=$(safe_jq '.proxy' false)
-        tor=$(safe_jq '.active_tor' false)
-        add_score "$fraud" "IPQualityScore resolved IP fraud ${fraud}"
-        [[ "$vpn" == "true" || "$proxy" == "true" || "$tor" == "true" ]] && add_score 120 "Resolved IP anonymity indicator"
-        IP_RESULT_LINES+=("IPQualityScore|fraud ${fraud}, vpn=${vpn}, proxy=${proxy}, tor=${tor}")
-    } || add_error "IPQualityScore: request failed"
-
     http_request 10 -G https://api.abuseipdb.com/api/v2/check --data-urlencode "ipAddress=$ip" -H "Key: $abuseapi" -H "Accept: application/json" && {
         local abuse
         abuse=$(safe_jq '.data.abuseConfidenceScore' 0)
@@ -583,7 +590,7 @@ EOF
 
 scan_url() {
     local input_url="$1"
-    local parsed target_url host root_domain is_host_ip
+    local parsed target_url scan_url_target scan_http_code redirect_hops input_host input_root host root_domain is_host_ip redirected
 
     SCORE=0
     ERRORS=()
@@ -594,6 +601,26 @@ scan_url() {
 
     mapfile -t parsed < <(parse_url "$input_url")
     target_url="${parsed[0]}"
+    input_host="${parsed[1]}"
+    input_root="${parsed[2]}"
+    scan_url_target="$target_url"
+    scan_http_code="000"
+    redirect_hops=0
+    redirected=false
+    if [[ -z "$input_host" ]]; then
+        echo -e "${LR}${SYM_ERR} Invalid URL:${NC} $target_url"
+        return 1
+    fi
+
+    redirect_info=$(resolve_final_url "$target_url")
+    IFS=$'\t' read -r scan_http_code scan_url_target redirect_hops <<< "$redirect_info"
+    if [[ -n "$scan_url_target" && "$scan_url_target" != "$target_url" ]]; then
+        redirected=true
+    fi
+    scan_url_target="${scan_url_target:-$target_url}"
+    [[ -z "$redirect_hops" ]] && redirect_hops=0
+
+    mapfile -t parsed < <(parse_url "$scan_url_target")
     host="${parsed[1]}"
     root_domain="${parsed[2]}"
     is_host_ip=false
@@ -602,13 +629,15 @@ scan_url() {
         root_domain="$host"
     fi
 
-    if [[ -z "$host" ]]; then
-        echo -e "${LR}${SYM_ERR} Invalid URL:${NC} $target_url"
-        return 1
-    fi
-
     log_header "Target"
     log_stat "${SYM_URL} URL" "${W}${target_url}${NC}"
+    if [[ "$redirected" == true ]]; then
+        log_stat "${SYM_URL} Final URL" "${W}${scan_url_target}${NC}"
+        log_stat "${SYM_URL} Redirect" "${Y}${redirect_hops} hop(s)${NC}"
+        log_stat "${SYM_DOM} Input Host" "${LC}${input_host}${NC}"
+        [[ "$input_root" != "$input_host" ]] && log_stat "${SYM_DOM} Input Root Domain" "${LC}${input_root}${NC}"
+    fi
+    [[ "$scan_http_code" != "000" ]] && log_stat "${SYM_URL} Final HTTP" "${W}${scan_http_code}${NC}"
     log_stat "${SYM_DOM} Host" "${LC}${host}${NC}"
     [[ "$root_domain" != "$host" ]] && log_stat "${SYM_DOM} Root Domain" "${LC}${root_domain}${NC}"
 
@@ -617,12 +646,12 @@ scan_url() {
     print_lines IP_RESULT_LINES
 
     log_header "URL Reputation"
-    vt_url_check "$target_url"
-    urlhaus_check "$target_url"
-    kaspersky_check "url" "$target_url" "URL"
-    threatfox_check "$target_url" "URL"
-    otx_check "url" "$target_url" "URL"
-    cloudflare_check "$target_url"
+    vt_url_check "$scan_url_target"
+    urlhaus_check "$scan_url_target"
+    kaspersky_check "url" "$scan_url_target" "URL"
+    threatfox_check "$scan_url_target" "URL"
+    otx_check "url" "$scan_url_target" "URL"
+    cloudflare_check "$scan_url_target"
     print_lines URL_RESULT_LINES
 
     log_header "Host And Domain Reputation"

@@ -164,7 +164,7 @@ Flags IPs as **MALICIOUS** (VPN detected), **OK** (Not VPN), or **UNKNOWN**.
 
 ## 3. URL IR (`urlir.sh`)
 
-Checks a suspicious URL with a compact SOC-friendly verdict. The script first resolves the URL host and enriches the first resolved IP, then checks URL reputation, then checks the host and root domain.
+Checks a suspicious URL with a compact SOC-friendly verdict. The script first follows redirects to the final destination, then resolves that host and enriches the first resolved IP, then checks URL reputation, then checks the host and root domain.
 
 ### Setup & Requirements
 
@@ -179,13 +179,14 @@ API keys are loaded from `/root/Tools/apikeys.txt`. The script verifies that the
 ./urlir.sh -file URLs.txt
 ```
 
-Cloudflare Radar is automatic: the script first searches for an existing URL Scanner result, uses it when available, and only creates a new scan when no usable result exists. File mode reads one URL per non-empty line and ignores lines starting with `#`.
+Cloudflare Radar is automatic: the script first searches for an existing URL Scanner result, uses it when available, and only creates a new scan when no usable result exists. When a URL redirects, the final destination is the one that is checked and the redirect hop count is shown in the output. File mode reads one URL per non-empty line and ignores lines starting with `#`.
 
 ### Output
 
 The output is intentionally short:
 
 - Resolved IP context
+- Redirected final destination, when applicable
 - URL reputation
 - Host and root-domain reputation
 - Traffic-light verdict: **CLEAN**, **SUSPICIOUS**, or **MALICIOUS**
