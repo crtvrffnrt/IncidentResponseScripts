@@ -85,7 +85,7 @@ check_hash() {
     if [[ -n "$hashtype" ]]; then
         echo -e "${LM}${SYM_FILE} Hash Detected: ${W}${input}${NC} (${hashtype})"
         if [[ -f "/root/Tools/mal.sh" ]]; then
-            /usr/bin/bash /Tools/mal.sh "$input"
+            /usr/bin/bash /root/Tools/mal.sh "$input"
         else
             echo -e "${LR}${SYM_ERR} mal.sh not found. VT Lookup:${NC}"
             curl -s -H "x-apikey: $vtapi" "https://www.virustotal.com/api/v3/files/$input" | jq -r '.data.attributes.last_analysis_stats'
