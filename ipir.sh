@@ -84,7 +84,7 @@ check_hash() {
 
     if [[ -n "$hashtype" ]]; then
         echo -e "${LM}${SYM_FILE} Hash Detected: ${W}${input}${NC} (${hashtype})"
-        if [[ -f "/root/Tools/mal.sh" ]]; then
+        if [[ -f "/root/Tools/IncidentResponseScripts/mal.sh" ]]; then
             /usr/bin/bash /root/Tools/mal.sh "$input"
         else
             echo -e "${LR}${SYM_ERR} mal.sh not found. VT Lookup:${NC}"
